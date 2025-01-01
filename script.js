@@ -4,7 +4,7 @@ let currentQuestion = {}; // 現在出題中の問題を保持
 
 // CSVデータを読み込む関数
 function loadCSV() {
-    fetch('data.csv') // ファイルパスを確認
+    fetch('JPHS.csv') // ファイル名を修正
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTPエラー: ${response.status} ${response.statusText}`);
@@ -12,19 +12,8 @@ function loadCSV() {
             return response.text();
         })
         .then(data => {
-            // CSVデータを解析して問題データを作成
-            const lines = data.split('\n');
-            lines.forEach((line, index) => {
-                if (index === 0 || !line.trim()) return; // ヘッダー行と空行をスキップ
-                const [Ans, Qus] = line.split(',');
-                if (Ans && Qus) {
-                    quizData.push({ Ans: parseInt(Ans.trim()), Qus: Qus.trim() });
-                } else {
-                    console.warn(`CSVフォーマットエラー: ${line} (行: ${index + 1})`);
-                }
-            });
-            remainingQuestions = [...quizData]; // 最初に全ての問題を残り問題リストにコピー
-            loadRandomQuestion(); // 最初のランダムな問題をロード
+            parseCSV(data); // CSVデータを解析
+            loadRandomQuestion(); // 最初の問題を表示
         })
         .catch(error => {
             console.error('CSV読み込みエラー:', error);
@@ -32,57 +21,76 @@ function loadCSV() {
         });
 }
 
+// CSVデータを解析する関数
+function parseCSV(data) {
+    const lines = data.split('\n');
+    lines.forEach((line, index) => {
+        if (index === 0 || !line.trim()) return; // ヘッダー行と空行をスキップ
+        const [Ans, Qus] = line.split(',');
+        if (Ans && Qus) {
+            quizData.push({ Ans: Ans.trim(), Qus: Qus.trim() });
+        } else {
+            console.warn(`CSVフォーマットエラー: ${line} (行: ${index + 1})`);
+        }
+    });
+    remainingQuestions = [...quizData]; // 全ての問題を残りの問題リストにコピー
+}
+
 // ランダムな問題を表示する関数
 function loadRandomQuestion() {
     if (remainingQuestions.length === 0) {
-        document.getElementById('question-text').innerText = 'クイズ終了！';
-        document.getElementById('result').innerHTML = '';
-        document.getElementById('Ans-input').disabled = true; // 終了後に入力を無効にする
-        document.getElementById('retry-btn').style.display = 'inline-block'; // 再挑戦ボタンを表示
+        endQuiz(); // 問題がなくなったら終了
         return;
     }
 
-    // ランダムに問題を選択
     const randomIndex = Math.floor(Math.random() * remainingQuestions.length);
     currentQuestion = remainingQuestions[randomIndex];
 
-    // 問題を表示
     document.getElementById('question-text').innerText = `${currentQuestion.Qus}`;
     document.getElementById('result').innerHTML = ''; // 結果をリセット
     document.getElementById('Ans-input').value = ''; // 入力フィールドをリセット
+    document.getElementById('next-btn').style.display = 'none'; // 次の問題ボタンを非表示
 
-    // 選ばれた問題を残りの問題リストから削除
-    remainingQuestions.splice(randomIndex, 1);
+    remainingQuestions.splice(randomIndex, 1); // 出題済みの問題をリストから削除
+}
+
+// クイズ終了時の処理
+function endQuiz() {
+    document.getElementById('question-text').innerText = 'クイズ終了！';
+    document.getElementById('result').innerHTML = '';
+    document.getElementById('Ans-input').disabled = true;
+    document.getElementById('retry-btn').style.display = 'block';
+    document.getElementById('next-btn').style.display = 'none';
 }
 
 // 答え合わせを行う関数
 function checkAnswer() {
-    const userInput = parseInt(document.getElementById('Ans-input').value);
+    const userInput = document.getElementById('Ans-input').value.trim();
 
-    if (isNaN(userInput)) {
-        document.getElementById('result').innerHTML = "<p style='color: red;'>年号を入力してください。</p>";
+    if (!userInput) {
+        document.getElementById('result').innerHTML = "<p style='color: red;'>答えを入力してください。</p>";
         return;
     }
 
     const correctAns = currentQuestion.Ans;
 
-    if (userInput === correctAns) {
-        document.getElementById('result').innerHTML = "<p style='color: green;'>正解です！</p>";
+    if (userInput.toLowerCase() === correctAns.toLowerCase()) {
+        document.getElementById('result').innerHTML = "<p style='color: green;'>正解です！次の問題へ進んでください。</p>";
     } else {
-        document.getElementById('result').innerHTML = `<p style='color: red;'>不正解です。正解は${correctAns}年です。</p>`;
+        document.getElementById('result').innerHTML = `<p style='color: red;'>不正解です。正解は「${correctAns}」です。次の問題へ進んでください。</p>`;
     }
 
-    // 次の問題に進む
-    setTimeout(loadRandomQuestion, 2000); // 2秒後に次の問題を表示
+    document.getElementById('next-btn').style.display = 'block';
 }
 
-// 再挑戦する関数
+// クイズを再挑戦する関数
 function retryQuiz() {
-    remainingQuestions = [...quizData]; // データをリセット
-    document.getElementById('Ans-input').disabled = false; // 入力を有効にする
-    loadRandomQuestion(); // 最初の問題を再度ロード
-    document.getElementById('retry-btn').style.display = 'none'; // 再挑戦ボタンを非表示
+    remainingQuestions = [...quizData];
+    document.getElementById('Ans-input').disabled = false;
+    document.getElementById('retry-btn').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'none';
+    loadRandomQuestion();
 }
 
-// ページが読み込まれたらCSVをロード
+// ページ読み込み時にCSVをロード
 window.onload = loadCSV;

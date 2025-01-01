@@ -22,7 +22,7 @@ h1 {
     margin: 20px 0;
 }
 
-input[type="number"] {
+input[type="text"] {
     padding: 8px;
     font-size: 16px;
     width: 100%;
@@ -37,23 +37,25 @@ button {
     border: none;
     cursor: pointer;
     width: 100%;
+    margin-top: 10px;
 }
 
 button:hover {
     background-color: #45a049;
 }
 
+button#next-btn,
+button#retry-btn {
+    background-color: #007BFF;
+}
+
+button#next-btn:hover,
+button#retry-btn:hover {
+    background-color: #0056b3;
+}
+
 .result {
     font-size: 18px;
     margin-top: 20px;
     text-align: center;
-}
-
-button#retry-btn {
-    margin-top: 20px;
-    background-color: #f44336;
-}
-
-button#retry-btn:hover {
-    background-color: #d32f2f;
 }

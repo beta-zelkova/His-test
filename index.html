@@ -12,9 +12,10 @@
         <div class="question">
             <p id="question-text">ここに問題が表示されます</p>
         </div>
-        <input type="number" id="Ans-input" placeholder="年号を入力してください">
+        <input type="text" id="Ans-input" placeholder="答えを入力してください">
         <button onclick="checkAnswer()">回答する</button>
         <div class="result" id="result"></div>
+        <button id="next-btn" style="display: none;" onclick="loadRandomQuestion()">次の問題へ</button>
         <button id="retry-btn" style="display: none;" onclick="retryQuiz()">再挑戦</button>
     </div>
     <script src="script.js"></script>
